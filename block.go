@@ -42,9 +42,11 @@ func (b *Block) serialise() *bytes.Buffer {
 	return buf
 }
 
-func deserialise(ser *bytes.Buffer) Block {
+func deserialise(ser []byte) Block {
+	buf := bytes.NewBuffer(ser)
+
 	im := make(map[string]string)
-	de := gob.NewDecoder(ser)
+	de := gob.NewDecoder(buf)
 
 	err := de.Decode(&im)
 	if err != nil {
@@ -65,4 +67,15 @@ func deserialise(ser *bytes.Buffer) Block {
 	parentHash := []byte(im["parentHash"])
 	hash := []byte(im["hash"])
 	return Block{index: index, timestamp: timestamp, data: data, parentHash: parentHash, hash: hash}
+}
+
+func (b *Block) verify(parentHash []byte) bool {
+	hash := sha256.New()
+	key := strconv.Itoa(b.index)
+	key += strconv.Itoa(b.timestamp)
+	key += b.data
+	key += string(b.parentHash)
+	hash.Write([]byte(key))
+
+	return string(hash.Sum(nil)) == string(b.hash) && string(parentHash) == string(b.parentHash)
 }
