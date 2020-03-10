@@ -94,7 +94,9 @@ func listen(chain *[]Block) {
 
 func query() {
 	conn, err := net.Dial("tcp", REMOTE_HOST+":"+REMOTE_PORT)
-	exit_on_error(err)
+	if err != nil {
+		fmt.Println(err)
+	}
 	err = binary.Write(conn, binary.LittleEndian, "a")
 	exit_on_error(err)
 }
