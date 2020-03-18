@@ -11,5 +11,6 @@ func main() {
 	block1.genHash()
 	chain := []Block{block1}
 	go listen(&chain)
+	go query(block1.hash)
 	wg.Wait()
 }

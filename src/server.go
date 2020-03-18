@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"net"
@@ -10,14 +11,8 @@ import (
 )
 
 const (
-	LOCAL_HOST = "127.0.0.1"
-	LOCAL_PORT = "6442"
-
 	LISTEN_HOST = "127.0.0.1"
 	LISTEN_PORT = "6443"
-
-	REMOTE_HOST = LISTEN_HOST
-	REMOTE_PORT = LISTEN_PORT
 )
 
 func add(buf []byte, chain *[]Block, conn net.Conn) {
@@ -26,7 +21,7 @@ func add(buf []byte, chain *[]Block, conn net.Conn) {
 		block := deserialise(buf)
 
 		if block.verify(lastBlock.hash) {
-			_ = binary.Write(conn, binary.LittleEndian, "Block verified and will be added to the blockchain")
+			conn.Write([]byte("Block verified and will be added to the blockchain"))
 			if lastBlock.index+1 < block.index {
 				sleep := time.Duration(lastBlock.index - block.index - 1)
 				time.Sleep(sleep * time.Second)
@@ -42,21 +37,22 @@ func search(buf []byte, chain *[]Block, conn net.Conn) {
 	target := string(buf)
 	stop := 0
 	for _, v := range *chain {
+
 		go func(v Block) {
 			defer wg.Done()
 			switch stop {
 			case 0:
 				if string(v.hash) == target {
 					stop = 1
-					ser := v.serialise()
-					_ = binary.Write(conn, binary.LittleEndian, ser)
+					ser := v.serialise().Bytes()
+					conn.Write(ser)
 				}
 			}
 		}(v)
 	}
 	wg.Wait()
 	if stop == 0 {
-		_ = binary.Write(conn, binary.LittleEndian, "Not found")
+		_ = binary.Write(conn, binary.LittleEndian, []byte("Not found"))
 	}
 }
 
@@ -73,32 +69,22 @@ func listen(chain *[]Block) {
 		} else {
 			defer conn.Close()
 			defer fmt.Println("")
-			buf := make([]byte, 1)
-			_, err = conn.Read(buf)
+			act := make([]byte, 1)
+			_, err = conn.Read(act)
 			fmt.Printf("Connected to: %s\n", conn.RemoteAddr().String())
-			err = binary.Read(conn, binary.LittleEndian, &buf)
-			act := buf[0]
-			buf = make([]byte, 512)
-			err = binary.Read(conn, binary.LittleEndian, &buf)
-			switch act {
+			hash := make([]byte, 512)
+			_, err = conn.Read(hash)
+			hash = bytes.Trim(hash, "\x00")
+			switch act[0] {
 			case 'a':
-				go add(buf, chain, conn)
+				go add(hash, chain, conn)
 				break
 			case 'q':
-				go search(buf, chain, conn)
+				go search(hash, chain, conn)
 				break
 			}
 		}
 	}
-}
-
-func query() {
-	conn, err := net.Dial("tcp", REMOTE_HOST+":"+REMOTE_PORT)
-	if err != nil {
-		fmt.Println(err)
-	}
-	err = binary.Write(conn, binary.LittleEndian, "a")
-	exit_on_error(err)
 }
 
 func exit_on_error(err error) {
