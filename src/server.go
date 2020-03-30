@@ -44,8 +44,9 @@ func search(buf []byte, chain *[]Block, conn net.Conn) {
 			case 0:
 				if string(v.hash) == target {
 					stop = 1
-					ser := v.serialise().Bytes()
-					conn.Write(ser)
+					toConn(v, conn)
+					// ser := v.serialise().Bytes()
+					// conn.Write(ser)
 				}
 			}
 		}(v)
@@ -54,6 +55,13 @@ func search(buf []byte, chain *[]Block, conn net.Conn) {
 	if stop == 0 {
 		_ = binary.Write(conn, binary.LittleEndian, []byte("Not found"))
 	}
+}
+
+func syncchain(chain *[]Block, conn net.Conn) {
+	for _, v := range *chain {
+		toConn(v, conn)
+	}
+	conn.Write([]byte("bitxer"))
 }
 
 func listen(chain *[]Block) {
@@ -73,14 +81,19 @@ func listen(chain *[]Block) {
 			_, err = conn.Read(act)
 			fmt.Printf("Connected to: %s\n", conn.RemoteAddr().String())
 			hash := make([]byte, 512)
-			_, err = conn.Read(hash)
-			hash = bytes.Trim(hash, "\x00")
+			if act[0] != 's' {
+				_, err = conn.Read(hash)
+				hash = bytes.Trim(hash, "\x00")
+			}
 			switch act[0] {
 			case 'a':
 				go add(hash, chain, conn)
 				break
 			case 'q':
 				go search(hash, chain, conn)
+				break
+			case 's':
+				go syncchain(chain, conn)
 				break
 			}
 		}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
+	"net"
 	"strconv"
 )
 
@@ -13,6 +14,7 @@ type Block struct {
 	data       string
 	parentHash []byte
 	hash       []byte
+	ready      bool
 }
 
 func (b *Block) genHash() {
@@ -23,6 +25,7 @@ func (b *Block) genHash() {
 	key += string(b.parentHash)
 	hash.Write([]byte(key))
 	b.hash = hash.Sum(nil)
+	b.ready = true
 }
 
 func (b *Block) serialise() *bytes.Buffer {
@@ -78,4 +81,8 @@ func (b *Block) verify(parentHash []byte) bool {
 	hash.Write([]byte(key))
 
 	return string(hash.Sum(nil)) == string(b.hash) && string(parentHash) == string(b.parentHash)
+}
+
+func toConn(b Block, conn net.Conn) (int, error) {
+	return conn.Write(b.serialise().Bytes())
 }
