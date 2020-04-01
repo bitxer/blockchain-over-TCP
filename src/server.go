@@ -10,11 +10,6 @@ import (
 	"time"
 )
 
-const (
-	LISTEN_HOST = "127.0.0.1"
-	LISTEN_PORT = "6443"
-)
-
 func add(buf []byte, chain *[]Block, conn net.Conn) {
 	for {
 		lastBlock := (*chain)[len(*chain)-1]
@@ -65,10 +60,10 @@ func syncchain(chain *[]Block, conn net.Conn) {
 }
 
 func listen(chain *[]Block) {
-	listener, err := net.Listen("tcp", ":"+LISTEN_PORT)
+	listener, err := net.Listen("tcp", ":"+BLOCKCHAIN_PORT)
 	exit_on_error(err)
 
-	fmt.Println("Listening on port", LISTEN_PORT)
+	fmt.Println("Listening on port", BLOCKCHAIN_PORT)
 
 	for {
 		conn, err := listener.Accept()
@@ -79,7 +74,7 @@ func listen(chain *[]Block) {
 			defer fmt.Println("")
 			act := make([]byte, 1)
 			_, err = conn.Read(act)
-			fmt.Printf("Connected to: %s\n", conn.RemoteAddr().String())
+			fmt.Printf("Connected to: %s", conn.RemoteAddr().String())
 			hash := make([]byte, 512)
 			if act[0] != 's' {
 				_, err = conn.Read(hash)

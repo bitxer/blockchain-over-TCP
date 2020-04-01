@@ -8,13 +8,8 @@ import (
 	"syscall"
 )
 
-const (
-	REMOTE_HOST = "127.0.0.1"
-	REMOTE_PORT = "6444"
-)
-
 func getConn() net.Conn {
-	addr := REMOTE_HOST + ":" + REMOTE_PORT
+	addr := REMOTE_HOST + ":" + BLOCKCHAIN_PORT
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		if err.(*net.OpError).Err.(*os.SyscallError).Err == syscall.ECONNREFUSED {
