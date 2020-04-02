@@ -1,88 +1,86 @@
 package main
 
 import (
-	"bytes"
 	"crypto/sha256"
-	"encoding/gob"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"net"
 	"strconv"
+	"time"
 )
 
 type Block struct {
-	index      int
-	timestamp  int
-	data       string
-	parentHash []byte
-	hash       []byte
-	ready      bool
+	Index      int
+	Timestamp  int
+	Data       string
+	ParentHash []byte
+	Hash       []byte
+	Ready      bool
 }
 
 func (b *Block) genHash() {
 	hash := sha256.New()
-	key := strconv.Itoa(b.index)
-	key += strconv.Itoa(b.timestamp)
-	key += b.data
-	key += string(b.parentHash)
+	key := strconv.Itoa(b.Index)
+	key += strconv.Itoa(b.Timestamp)
+	key += b.Data
+	key += string(b.ParentHash)
 	hash.Write([]byte(key))
-	b.hash = hash.Sum(nil)
-	b.ready = true
+	b.Hash = hash.Sum(nil)
+	b.Ready = true
 }
 
-func (b *Block) serialise() *bytes.Buffer {
-	ex := make(map[string]string)
-	ex["index"] = strconv.Itoa(b.index)
-	ex["timestamp"] = strconv.Itoa(b.timestamp)
-	ex["data"] = b.data
-	ex["parentHash"] = string(b.parentHash)
-	ex["hash"] = string(b.hash)
-	buf := new(bytes.Buffer)
-
-	en := gob.NewEncoder(buf)
-	err := en.Encode(ex)
+func (b *Block) serialise() []byte {
+	var jsonData []byte
+	jsonData, err := json.Marshal(b)
 	if err != nil {
-		panic(err)
+		fmt.Println("Error serialising block")
 	}
-	return buf
+	return jsonData
 }
 
 func deserialise(ser []byte) Block {
-	buf := bytes.NewBuffer(ser)
-
-	im := make(map[string]string)
-	de := gob.NewDecoder(buf)
-
-	err := de.Decode(&im)
+	var block Block
+	err := json.Unmarshal(ser, &block)
 	if err != nil {
-		panic(err)
+		fmt.Println("An unexpected error occured. Please try again")
 	}
-
-	index, err := strconv.Atoi(im["index"])
-	if err != nil {
-		panic(err)
-	}
-
-	timestamp, err := strconv.Atoi(im["timestamp"])
-	if err != nil {
-		panic(err)
-	}
-
-	data := im["data"]
-	parentHash := []byte(im["parentHash"])
-	hash := []byte(im["hash"])
-	return Block{index: index, timestamp: timestamp, data: data, parentHash: parentHash, hash: hash}
+	return block
 }
 
 func (b *Block) verify(parentHash []byte) bool {
 	hash := sha256.New()
-	key := strconv.Itoa(b.index)
-	key += strconv.Itoa(b.timestamp)
-	key += b.data
-	key += string(b.parentHash)
+	key := strconv.Itoa(b.Index)
+	key += strconv.Itoa(b.Timestamp)
+	key += b.Data
+	key += string(b.ParentHash)
 	hash.Write([]byte(key))
 
-	return string(hash.Sum(nil)) == string(b.hash) && string(parentHash) == string(b.parentHash)
+	return string(hash.Sum(nil)) == string(b.Hash) && string(parentHash) == string(b.ParentHash)
 }
 
-func toConn(b Block, conn net.Conn) (int, error) {
-	return conn.Write(b.serialise().Bytes())
+func (b *Block) toConn(conn net.Conn) (int, error) {
+	return conn.Write(b.serialise())
+}
+
+func addBlock(chain *[]Block, b Block) bool {
+	lastBlock := (*chain)[len(*chain)-1]
+
+	if b.verify(lastBlock.Hash) {
+		if lastBlock.Index+1 < b.Index {
+			sleep := time.Duration(lastBlock.Index - b.Index - 1)
+			time.Sleep(sleep * time.Second)
+		}
+		*chain = append(*chain, b)
+	}
+	return string(b.Hash) == string((*chain)[len(*chain)-1].Hash)
+}
+
+func (b *Block) Print() {
+	fmt.Println("=========================")
+	fmt.Printf("Index:\t\t%d\n", b.Index)
+	fmt.Printf("Timestamp:\t%d\n", b.Timestamp)
+	fmt.Printf("Data:\t\t%s\n", b.Data)
+	fmt.Printf("Parent Hash:\t%064s\n", hex.EncodeToString(b.ParentHash))
+	fmt.Printf("Hash:\t\t%64s\n", hex.EncodeToString(b.Hash))
 }

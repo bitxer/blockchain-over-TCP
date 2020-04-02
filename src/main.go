@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -23,10 +24,38 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	block1 := Block{index: 1, timestamp: 1, data: "data", parentHash: []byte{0}}
+	block1 := Block{Index: 1, Timestamp: 1, Data: "data", ParentHash: []byte{0}}
 	block1.genHash()
 	chain := []Block{block1}
-	go listen(&chain)
-	go query(block1.hash)
+	go listen(&chain, &wg)
 	wg.Wait()
+
+	for {
+		fmt.Println("What woulld you like to do?")
+		fmt.Println("1. Query Block")
+		fmt.Println("2. Add Block")
+		fmt.Println("3. Sync")
+		fmt.Println("4. Print all blocks")
+		fmt.Print("> ")
+		option, _ := reader.ReadString('\n')
+		option = strings.Replace(option, "\n", "", -1)
+
+		switch {
+		case option[0] == '1':
+			fmt.Print("Query for block of index: ")
+			buf, _ := reader.ReadString('\n')
+			buf = strings.Replace(option, "\n", "", -1)
+			index, _ := strconv.Atoi(buf)
+			query(index)
+		case option[0] == '2':
+			// add()
+			fmt.Println("Add Block")
+		case option[0] == '3':
+			fmt.Println("Sync chain")
+		case option[0] == '4':
+			fmt.Print("Printing all blocks in chain")
+		default:
+			fmt.Println("[-] Invalid option specified. Please choose a valid option")
+		}
+	}
 }
