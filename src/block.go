@@ -12,7 +12,7 @@ import (
 
 type Block struct {
 	Index      int
-	Timestamp  int
+	Timestamp  time.Time
 	Data       string
 	ParentHash []byte
 	Hash       []byte
@@ -22,7 +22,7 @@ type Block struct {
 func (b *Block) genHash() {
 	hash := sha256.New()
 	key := strconv.Itoa(b.Index)
-	key += strconv.Itoa(b.Timestamp)
+	key += b.Timestamp.String()
 	key += b.Data
 	key += string(b.ParentHash)
 	hash.Write([]byte(key))
@@ -51,7 +51,7 @@ func deserialise(ser []byte) Block {
 func (b *Block) verify(parentHash []byte) bool {
 	hash := sha256.New()
 	key := strconv.Itoa(b.Index)
-	key += strconv.Itoa(b.Timestamp)
+	key += b.Timestamp.String()
 	key += b.Data
 	key += string(b.ParentHash)
 	hash.Write([]byte(key))
@@ -79,7 +79,7 @@ func addBlock(chain *[]Block, b Block) bool {
 func (b *Block) Print() {
 	fmt.Println("=========================")
 	fmt.Printf("Index:\t\t%d\n", b.Index)
-	fmt.Printf("Timestamp:\t%d\n", b.Timestamp)
+	fmt.Printf("Timestamp:\t%s\n", b.Timestamp.String())
 	fmt.Printf("Data:\t\t%s\n", b.Data)
 	fmt.Printf("Parent Hash:\t%064s\n", hex.EncodeToString(b.ParentHash))
 	fmt.Printf("Hash:\t\t%64s\n", hex.EncodeToString(b.Hash))

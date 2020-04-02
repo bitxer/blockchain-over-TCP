@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var REMOTE_HOST string
@@ -24,13 +25,14 @@ func main() {
 
 	var wg sync.WaitGroup
 	wg.Add(1)
-	block1 := Block{Index: 1, Timestamp: 1, Data: "data", ParentHash: []byte{0}}
+	block1 := Block{Index: 1, Timestamp: time.Now(), Data: "data", ParentHash: []byte{0}}
 	block1.genHash()
 	chain := []Block{block1}
 	go listen(&chain, &wg)
 	wg.Wait()
 
 	for {
+		fmt.Println("=========================")
 		fmt.Println("What woulld you like to do?")
 		fmt.Println("1. Query Block")
 		fmt.Println("2. Add Block")
@@ -48,12 +50,16 @@ func main() {
 			index, _ := strconv.Atoi(buf)
 			query(index)
 		case option[0] == '2':
-			// add()
-			fmt.Println("Add Block")
+			fmt.Print("Data to be contained in block: ")
+			buf, _ := reader.ReadString('\n')
+			buf = strings.Replace(option, "\n", "", -1)
+			add(&chain, buf)
 		case option[0] == '3':
-			fmt.Println("Sync chain")
+			reqsync(&chain)
 		case option[0] == '4':
-			fmt.Print("Printing all blocks in chain")
+			for _, v := range chain {
+				v.Print()
+			}
 		default:
 			fmt.Println("[-] Invalid option specified. Please choose a valid option")
 		}

@@ -1,11 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"os"
 	"syscall"
+	"time"
 )
 
 func getConn() net.Conn {
@@ -45,34 +45,25 @@ func query(index int) {
 	// fmt.Println(block)
 }
 
-func reqsync(chain *[]Block) {
+func reqsync(gChain *[]Block) {
 	conn := getConn()
 	if conn == nil {
 		return
 	}
-	var lastBlock Block
-	lastBlock.Ready = false
+	chain := *gChain
+	lastBlock := chain[(len(chain))-1]
 	conn.Write([]byte("s"))
-	for {
-		buf := make([]byte, 512)
-		conn.Read(buf)
-		buf = bytes.Trim(buf, "\x00")
-		block := deserialise(buf)
-		if (!lastBlock.Ready && block.Index == 1) || block.verify(lastBlock.Hash) {
-			*chain = append(*chain, block)
-		} else {
-			fmt.Println("Error syncing. Check reliability")
-			os.Exit(1)
-		}
-	}
+	conn.Write([]byte{byte(lastBlock.Index)})
+
 }
 
-// func addBlock(chain *[]Block, data string) {
-// 	conn := getConn()
-// 	if conn == nil {
-// 		return
-// 	}
-// 	lastBlock := (*chain)[len(*chain)-1]
-// 	block := Block{index: lastBlock.index + 1, timestamp: 1, data: data, parentHash: lastBlock.hash}
+func add(chain *[]Block, data string) {
+	conn := getConn()
+	if conn == nil {
+		return
+	}
+	lastBlock := (*chain)[len(*chain)-1]
+	block := Block{Index: lastBlock.Index + 1, Timestamp: time.Now(), Data: data, ParentHash: lastBlock.Hash}
+	fmt.Println(block)
 
-// }
+}
