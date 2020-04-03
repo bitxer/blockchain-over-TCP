@@ -86,6 +86,9 @@ func listen(chain *[]Block, wg *sync.WaitGroup) {
 				buf = make([]byte, 1)
 				conn.Read(buf)
 				go search(int(buf[0]), chain, conn)
+			case 'l':
+				lastBlock := (*chain)[len(*chain)-1]
+				go search(lastBlock.Index, chain, conn)
 			case 's':
 				buf = make([]byte, 1)
 				conn.Read(buf)

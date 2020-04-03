@@ -35,9 +35,10 @@ func main() {
 		fmt.Println("=========================")
 		fmt.Println("What woulld you like to do?")
 		fmt.Println("1. Query Block")
-		fmt.Println("2. Add Block")
-		fmt.Println("3. Sync")
-		fmt.Println("4. Print all blocks")
+		fmt.Println("2. Query Last Block")
+		fmt.Println("3. Add Block")
+		fmt.Println("4. Sync")
+		fmt.Println("5. Print all blocks")
 		fmt.Print("> ")
 		option, _ := reader.ReadString('\n')
 		option = strings.Replace(option, "\n", "", -1)
@@ -50,13 +51,15 @@ func main() {
 			index, _ := strconv.Atoi(buf)
 			query(index)
 		case option[0] == '2':
+			querylast()
+		case option[0] == '3':
 			fmt.Print("Data to be contained in block: ")
 			buf, _ := reader.ReadString('\n')
 			buf = strings.Replace(option, "\n", "", -1)
 			add(&chain, buf)
-		case option[0] == '3':
-			reqsync(&chain)
 		case option[0] == '4':
+			reqsync(&chain)
+		case option[0] == '5':
 			for _, v := range chain {
 				v.Print()
 			}

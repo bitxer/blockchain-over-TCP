@@ -68,8 +68,7 @@ func addBlock(chain *[]Block, b Block) bool {
 
 	if b.verify(lastBlock.Hash) {
 		if lastBlock.Index+1 < b.Index {
-			sleep := time.Duration(lastBlock.Index - b.Index - 1)
-			time.Sleep(sleep * time.Second)
+			fmt.Println("WRONGG")
 		}
 		*chain = append(*chain, b)
 	}
