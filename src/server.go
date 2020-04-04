@@ -37,11 +37,8 @@ func search(index int, chain *[]Block, conn net.Conn) {
 	conn.Close()
 }
 
-func syncchain(chain *[]Block, conn net.Conn, start int) {
+func syncchain(chain *[]Block, conn net.Conn) {
 	for _, v := range *chain {
-		if v.Index < start {
-			continue
-		}
 		n, _ := v.toConn(conn)
 		buf := make([]byte, 1)
 		conn.Read(buf)
@@ -86,9 +83,7 @@ func listen(chain *[]Block, wg *sync.WaitGroup) {
 				lastBlock := (*chain)[len(*chain)-1]
 				go search(lastBlock.Index, chain, conn)
 			case 's':
-				buf = make([]byte, 1)
-				conn.Read(buf)
-				go syncchain(chain, conn, int(buf[0]))
+				go syncchain(chain, conn)
 			}
 		}
 	}

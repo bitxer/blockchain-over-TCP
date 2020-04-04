@@ -53,16 +53,11 @@ func reqsync(chain *[]Block) {
 	}
 	conn.Write([]byte("s"))
 
-	if len(*chain) == 0 {
-		conn.Write([]byte{byte(0)})
-	} else {
-		lastBlock := (*chain)[(len(*chain))-1]
-		conn.Write([]byte{byte(lastBlock.Index)})
-	}
-
 	stop := false
 	stopcode := []byte("bitxer")
 	stopcode_len := len(stopcode)
+	chain_len := len(*chain)
+	counter := 0
 	for !stop {
 		buf := make([]byte, 256)
 		n, _ := conn.Read(buf)
@@ -70,8 +65,13 @@ func reqsync(chain *[]Block) {
 		stop = n == stopcode_len && bytes.Compare(buf, stopcode) == 0
 		if !stop {
 			block := deserialise(buf)
-			addtoChain(chain, block)
+			if counter < chain_len {
+				(*chain)[counter] = block
+			} else {
+				addtoChain(chain, block)
+			}
 			conn.Write([]byte{byte(n)})
+			counter++
 		}
 	}
 	conn.Close()
