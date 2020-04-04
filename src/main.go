@@ -12,31 +12,38 @@ import (
 
 var REMOTE_HOST string
 var BLOCKCHAIN_PORT string
+var verbose = false
 
 func main() {
-	fmt.Print("Enter peer address: ")
+	printPrompt("Enter peer address:")
 	reader := bufio.NewReader(os.Stdin)
 	REMOTE_HOST, _ = reader.ReadString('\n')
 	REMOTE_HOST = strings.Replace(REMOTE_HOST, "\n", "", -1)
 
-	fmt.Print("Enter blockchain port: ")
+	printPrompt("Enter blockchain port:")
 	BLOCKCHAIN_PORT, _ = reader.ReadString('\n')
 	BLOCKCHAIN_PORT = strings.Replace(BLOCKCHAIN_PORT, "\n", "", -1)
 
-	fmt.Print("Would you like to initialise the blockchain? [Y/n]: ")
+	printPrompt("Run listener on verbose? [Y/n]:")
+	vopt, _ := reader.ReadString('\n')
+	vopt = strings.Replace(vopt, "\n", "", -1)
+	verbose = vopt[0] == 'Y'
+
+	printPrompt("Would you like to initialise the blockchain? [Y/n]:")
 	choice, _ := reader.ReadString('\n')
 	chain := []Block{}
+
 	switch choice[0] {
 	case 'Y':
-		block1 := Block{Index: 1, Timestamp: time.Now(), Data: "Genesis", ParentHash: []byte{0}}
+		block1 := Block{Index: 1, Timestamp: time.Now(), Data: "Genesis", ParentHash: ""}
 		block1.genHash()
 		chain = []Block{block1}
-		fmt.Println("Chain initialised with genesis block")
+		printSuccess("Chain initialised with genesis block")
 	case 'n':
-		fmt.Println("Skipped chain inistialisation")
+		printInfo("Skipped chain initialisation")
 	default:
-		fmt.Println("Unknown input")
-		fmt.Println("Skipped chain inistialisation")
+		printError("Unknown input")
+		printInfo("Skipped chain inistialisation")
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -61,7 +68,7 @@ func main() {
 		switch {
 		case option[0] == '1':
 			// Query for block at index
-			fmt.Print("Query for block of index: ")
+			printPrompt("Query for block of index:")
 			buf, _ := reader.ReadString('\n')
 			buf = strings.Replace(option, "\n", "", -1)
 			index, _ := strconv.Atoi(buf)
@@ -71,7 +78,7 @@ func main() {
 			querylast()
 		case option[0] == '3':
 			// Create block with data
-			fmt.Print("Data to be contained in block: ")
+			printPrompt("Data to be contained in block:")
 			buf, _ := reader.ReadString('\n')
 			buf = strings.Replace(buf, "\n", "", -1)
 			add(&chain, buf)
@@ -84,7 +91,7 @@ func main() {
 				v.Print()
 			}
 		default:
-			fmt.Println("[-] Invalid option specified. Please choose a valid option")
+			printError("Invalid option specified. Please choose a valid option")
 		}
 	}
 }
@@ -92,15 +99,12 @@ func main() {
 func addtoChain(chain *[]Block, b Block) bool {
 	if len(*chain) > 0 {
 		lastBlock := (*chain)[len(*chain)-1]
-		if b.verify(lastBlock.Hash) {
-			if lastBlock.Index+1 < b.Index {
-				fmt.Println("WRONGG")
-			}
-			*chain = append(*chain, b)
+		if b.verify(lastBlock.Hash) && lastBlock.Index+1 == b.Index {
+			return false
 		}
+		*chain = append(*chain, b)
 	} else {
 		*chain = append(*chain, b)
 	}
-
-	return string(b.Hash) == string((*chain)[len(*chain)-1].Hash)
+	return b.Hash == (*chain)[len(*chain)-1].Hash
 }

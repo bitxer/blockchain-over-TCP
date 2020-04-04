@@ -33,17 +33,17 @@ func query(index int) {
 	buf := make([]byte, 1)
 	conn.Read(buf)
 	if buf[0] == 0 {
-		fmt.Printf("not found")
+		printInfo("Block of index", string(index), "not found")
+		// fmt.Printf("not found")
 		return
 	} else {
 		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)
-		// fmt.Printf("Queried block has '%s' in data\n", block.Data)
 		block.Print()
 	}
-	// fmt.Println(block)
+	conn.Close()
 }
 
 func reqsync(chain *[]Block) {
@@ -74,27 +74,46 @@ func reqsync(chain *[]Block) {
 			conn.Write([]byte{byte(n)})
 		}
 	}
+	conn.Close()
 }
 
 func add(chain *[]Block, data string) {
+	reqsync(chain)
+
 	conn := getConn()
 	if conn == nil {
 		return
 	}
+
 	index := 0
-	lhash := []byte{}
-	if len(*chain) > 0 {
-		lastBlock := (*chain)[len(*chain)-1]
-		index = lastBlock.Index
-		lhash = lastBlock.Hash
-	} else {
-		fmt.Println("Chain not initialised")
-		fmt.Println("Adding block as start of chain block")
-		lhash = []byte{0}
-	}
+	lhash := ""
+
+	// if len(*chain) > 0 {
+	lastBlock := (*chain)[len(*chain)-1]
+	index = lastBlock.Index
+	lhash = lastBlock.Hash
+	// } else {
+	// 	printInfo("Chain not initialised")
+	// 	printInfo("Adding block as start of chain block")
+	// 	lhash = []byte{0}
+	// }
 	block := Block{Index: index + 1, Timestamp: time.Now(), Data: data, ParentHash: lhash}
 	block.genHash()
-	addtoChain(chain, block)
+	// addtoChain(chain, block)
+	conn.Write([]byte("a"))
+	buf := make([]byte, 1)
+	// conn.Read(buf)
+
+	// if buf[0] == 1 {
+	block.toConn(conn)
+	conn.Read(buf)
+	if buf[0] == 1 {
+		printSuccess("Successfully add block to chain")
+	} else {
+		printError("Block added unsuccessfully due to validation errors")
+	}
+	conn.Close()
+	// }
 }
 
 func querylast() {
@@ -107,14 +126,14 @@ func querylast() {
 	buf := make([]byte, 1)
 	conn.Read(buf)
 	if buf[0] == 0 {
-		fmt.Printf("Chain not initialised")
+		printInfo("Chain not initialised")
 		return
 	} else {
 		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)
-		// fmt.Printf("Queried block has '%s' in data\n", block.Data)
 		block.Print()
 	}
+	conn.Close()
 }

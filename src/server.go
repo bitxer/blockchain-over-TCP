@@ -1,31 +1,19 @@
 package main
 
 import (
-	"bytes"
-	"fmt"
 	"net"
 	"os"
 	"sync"
 )
 
-// func add(buf []byte, chain *[]Block, conn net.Conn) {
-// 	for {
-// 		// lastBlock := (*chain)[len(*chain)-1]
-// 		// block := deserialise(buf)
-
-// 		// if block.verify(lastBlock.hash) {
-// 		// 	conn.Write([]byte("Block verified and will be added to the blockchain"))
-// 		// 	if lastBlock.index+1 < block.index {
-// 		// 		sleep := time.Duration(lastBlock.index - block.index - 1)
-// 		// 		time.Sleep(sleep * time.Second)
-// 		// 	}
-// 		// 	*chain = append(*chain, block)
-// 		// }
-// 		if addBlock(chain, deserialise(buf)) {
-// 			conn.Write([]byte("Block have been added successfully"))
-// 		}
-// 	}
-// }
+func server_add(buf []byte, chain *[]Block, conn net.Conn) {
+	if addtoChain(chain, deserialise(buf)) {
+		conn.Write([]byte{1})
+		return
+	}
+	conn.Write([]byte{0})
+	conn.Close()
+}
 
 func search(index int, chain *[]Block, conn net.Conn) {
 	var wg sync.WaitGroup
@@ -58,37 +46,38 @@ func syncchain(chain *[]Block, conn net.Conn, start int) {
 		buf := make([]byte, 1)
 		conn.Read(buf)
 		if n != int(buf[0]) {
-			fmt.Println("mismatch length")
+			printError("Mismatch length when syncing chain")
 			break
 		}
 
 	}
 	conn.Write([]byte("bitxer"))
+	conn.Close()
 }
 
 func listen(chain *[]Block, wg *sync.WaitGroup) {
 	listener, err := net.Listen("tcp", ":"+BLOCKCHAIN_PORT)
 	exit_on_error(err)
 
-	fmt.Println("[+] Listening on port", BLOCKCHAIN_PORT)
+	printSuccess("Listening on port", BLOCKCHAIN_PORT)
 	wg.Done()
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println(err)
+			printError(err.Error())
 		} else {
-			// defer conn.Close()
-			// defer fmt.Println("")
 			buf := make([]byte, 1)
 			_, err = conn.Read(buf)
-			fmt.Println("Connected to:", conn.RemoteAddr().String())
+			if verbose {
+				printInfo("Connected to:", conn.RemoteAddr().String())
+			}
 
 			switch buf[0] {
 			case 'a':
-				hash := make([]byte, 256)
-				_, err = conn.Read(hash)
-				hash = bytes.Trim(hash, "\x00")
-				// go add(hash, chain, conn)
+				buf = make([]byte, 256)
+				n, _ := conn.Read(buf)
+				buf = buf[:n]
+				go server_add(buf, chain, conn)
 			case 'q':
 				buf = make([]byte, 1)
 				conn.Read(buf)
@@ -107,7 +96,7 @@ func listen(chain *[]Block, wg *sync.WaitGroup) {
 
 func exit_on_error(err error) {
 	if err != nil {
-		fmt.Println(err)
+		printError(err.Error())
 		os.Exit(1)
 	}
 }
