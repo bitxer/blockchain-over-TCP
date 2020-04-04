@@ -25,10 +25,10 @@ func main() {
 
 	fmt.Print("Would you like to initialise the blockchain? [Y/n]: ")
 	choice, _ := reader.ReadString('\n')
-	var chain []Block
+	chain := []Block{}
 	switch choice[0] {
 	case 'Y':
-		block1 := Block{Index: 1, Timestamp: time.Now(), Data: "GEnesis", ParentHash: []byte{0}}
+		block1 := Block{Index: 1, Timestamp: time.Now(), Data: "Genesis", ParentHash: []byte{0}}
 		block1.genHash()
 		chain = []Block{block1}
 		fmt.Println("Chain initialised with genesis block")

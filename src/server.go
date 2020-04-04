@@ -54,7 +54,14 @@ func syncchain(chain *[]Block, conn net.Conn, start int) {
 		if v.Index < start {
 			continue
 		}
-		v.toConn(conn)
+		n, _ := v.toConn(conn)
+		buf := make([]byte, 1)
+		conn.Read(buf)
+		if n != int(buf[0]) {
+			fmt.Println("mismatch length")
+			break
+		}
+
 	}
 	conn.Write([]byte("bitxer"))
 }
