@@ -70,7 +70,7 @@ func reqsync(chain *[]Block) {
 		stop = n == stopcode_len && bytes.Compare(buf, stopcode) == 0
 		if !stop {
 			block := deserialise(buf)
-			addBlock(chain, block)
+			addtoChain(chain, block)
 			conn.Write([]byte{byte(n)})
 		}
 	}
@@ -81,10 +81,20 @@ func add(chain *[]Block, data string) {
 	if conn == nil {
 		return
 	}
-	lastBlock := (*chain)[len(*chain)-1]
-	block := Block{Index: lastBlock.Index + 1, Timestamp: time.Now(), Data: data, ParentHash: lastBlock.Hash}
-	fmt.Println(block)
-
+	index := 0
+	lhash := []byte{}
+	if len(*chain) > 0 {
+		lastBlock := (*chain)[len(*chain)-1]
+		index = lastBlock.Index
+		lhash = lastBlock.Hash
+	} else {
+		fmt.Println("Chain not initialised")
+		fmt.Println("Adding block as start of chain block")
+		lhash = []byte{0}
+	}
+	block := Block{Index: index + 1, Timestamp: time.Now(), Data: data, ParentHash: lhash}
+	block.genHash()
+	addtoChain(chain, block)
 }
 
 func querylast() {

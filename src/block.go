@@ -63,22 +63,6 @@ func (b *Block) toConn(conn net.Conn) (int, error) {
 	return conn.Write(b.serialise())
 }
 
-func addBlock(chain *[]Block, b Block) bool {
-	if len(*chain) > 0 {
-		lastBlock := (*chain)[len(*chain)-1]
-		if b.verify(lastBlock.Hash) {
-			if lastBlock.Index+1 < b.Index {
-				fmt.Println("WRONGG")
-			}
-			*chain = append(*chain, b)
-		}
-	} else {
-		*chain = append(*chain, b)
-	}
-
-	return string(b.Hash) == string((*chain)[len(*chain)-1].Hash)
-}
-
 func (b *Block) Print() {
 	fmt.Println("=========================")
 	fmt.Printf("Index:\t\t%d\n", b.Index)

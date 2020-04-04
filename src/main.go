@@ -57,21 +57,26 @@ func main() {
 
 		switch {
 		case option[0] == '1':
+			// Query for block at index
 			fmt.Print("Query for block of index: ")
 			buf, _ := reader.ReadString('\n')
 			buf = strings.Replace(option, "\n", "", -1)
 			index, _ := strconv.Atoi(buf)
 			query(index)
 		case option[0] == '2':
+			// Query for last block
 			querylast()
 		case option[0] == '3':
+			// Create block with data
 			fmt.Print("Data to be contained in block: ")
 			buf, _ := reader.ReadString('\n')
-			buf = strings.Replace(option, "\n", "", -1)
+			buf = strings.Replace(buf, "\n", "", -1)
 			add(&chain, buf)
 		case option[0] == '4':
+			// Sync block chain with remote peer
 			reqsync(&chain)
 		case option[0] == '5':
+			// Print all block chain to screen
 			for _, v := range chain {
 				v.Print()
 			}
@@ -79,4 +84,20 @@ func main() {
 			fmt.Println("[-] Invalid option specified. Please choose a valid option")
 		}
 	}
+}
+
+func addtoChain(chain *[]Block, b Block) bool {
+	if len(*chain) > 0 {
+		lastBlock := (*chain)[len(*chain)-1]
+		if b.verify(lastBlock.Hash) {
+			if lastBlock.Index+1 < b.Index {
+				fmt.Println("WRONGG")
+			}
+			*chain = append(*chain, b)
+		}
+	} else {
+		*chain = append(*chain, b)
+	}
+
+	return string(b.Hash) == string((*chain)[len(*chain)-1].Hash)
 }
