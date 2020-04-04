@@ -54,6 +54,9 @@ func main() {
 		fmt.Print("> ")
 		option, _ := reader.ReadString('\n')
 		option = strings.Replace(option, "\n", "", -1)
+		if option == "" {
+			continue
+		}
 
 		switch {
 		case option[0] == '1':
