@@ -36,7 +36,7 @@ func query(index int) {
 		fmt.Printf("not found")
 		return
 	} else {
-		buf = make([]byte, 512)
+		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)
@@ -64,7 +64,7 @@ func reqsync(chain *[]Block) {
 	stopcode := []byte("bitxer")
 	stopcode_len := len(stopcode)
 	for !stop {
-		buf := make([]byte, 512)
+		buf := make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		stop = n == stopcode_len && bytes.Compare(buf, stopcode) == 0
@@ -100,7 +100,7 @@ func querylast() {
 		fmt.Printf("Chain not initialised")
 		return
 	} else {
-		buf = make([]byte, 512)
+		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)

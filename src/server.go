@@ -85,7 +85,7 @@ func listen(chain *[]Block, wg *sync.WaitGroup) {
 
 			switch buf[0] {
 			case 'a':
-				hash := make([]byte, 512)
+				hash := make([]byte, 256)
 				_, err = conn.Read(hash)
 				hash = bytes.Trim(hash, "\x00")
 				// go add(hash, chain, conn)
