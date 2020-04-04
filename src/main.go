@@ -23,11 +23,23 @@ func main() {
 	BLOCKCHAIN_PORT, _ = reader.ReadString('\n')
 	BLOCKCHAIN_PORT = strings.Replace(BLOCKCHAIN_PORT, "\n", "", -1)
 
+	fmt.Print("Would you like to initialise the blockchain? [Y/n]: ")
+	choice, _ := reader.ReadString('\n')
+	var chain []Block
+	switch choice[0] {
+	case 'Y':
+		block1 := Block{Index: 1, Timestamp: time.Now(), Data: "GEnesis", ParentHash: []byte{0}}
+		block1.genHash()
+		chain = []Block{block1}
+		fmt.Println("Chain initialised with genesis block")
+	case 'n':
+		fmt.Println("Skipped chain inistialisation")
+	default:
+		fmt.Println("Unknown input")
+		fmt.Println("Skipped chain inistialisation")
+	}
 	var wg sync.WaitGroup
 	wg.Add(1)
-	block1 := Block{Index: 1, Timestamp: time.Now(), Data: "data", ParentHash: []byte{0}}
-	block1.genHash()
-	chain := []Block{block1}
 	go listen(&chain, &wg)
 	wg.Wait()
 
