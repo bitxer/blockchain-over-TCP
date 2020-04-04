@@ -34,7 +34,6 @@ func query(index int) {
 	conn.Read(buf)
 	if buf[0] == 0 {
 		printInfo("Block of index", string(index), "not found")
-		// fmt.Printf("not found")
 		return
 	} else {
 		buf = make([]byte, 256)
@@ -88,24 +87,16 @@ func add(chain *[]Block, data string) {
 	index := 0
 	lhash := ""
 
-	// if len(*chain) > 0 {
 	lastBlock := (*chain)[len(*chain)-1]
 	index = lastBlock.Index
 	lhash = lastBlock.Hash
-	// } else {
-	// 	printInfo("Chain not initialised")
-	// 	printInfo("Adding block as start of chain block")
-	// 	lhash = []byte{0}
-	// }
 	block := Block{Index: index + 1, Timestamp: time.Now(), Data: data, ParentHash: lhash}
 	block.genHash()
-	// addtoChain(chain, block)
+
 	conn.Write([]byte("a"))
 	buf := make([]byte, 1)
-	// conn.Read(buf)
-
-	// if buf[0] == 1 {
 	block.toConn(conn)
+
 	conn.Read(buf)
 	if buf[0] == 1 {
 		printSuccess("Successfully add block to chain")
@@ -113,7 +104,6 @@ func add(chain *[]Block, data string) {
 		printError("Block added unsuccessfully due to validation errors")
 	}
 	conn.Close()
-	// }
 }
 
 func querylast() {
