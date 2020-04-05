@@ -31,13 +31,14 @@ func query(index int) {
 	buf := make([]byte, 1)
 	conn.Read(buf)
 	if buf[0] == 0 {
-		printInfo("Block of index", string(index), "not found")
+		printError("Block of index", string(index), "not found")
 		return
 	} else {
 		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)
+		printSuccess("Block of index", string(index), "found")
 		block.Print()
 	}
 	conn.Close()
@@ -71,6 +72,7 @@ func reqsync(chain *[]Block) {
 			counter++
 		}
 	}
+	printSuccess("Successfully synced blockchain from peer")
 	conn.Close()
 }
 
@@ -115,13 +117,14 @@ func querylast() {
 	buf := make([]byte, 1)
 	conn.Read(buf)
 	if buf[0] == 0 {
-		printInfo("Chain not initialised")
+		printError("Chain not initialised")
 		return
 	} else {
 		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)
+		printSuccess("Last block found")
 		block.Print()
 	}
 	conn.Close()

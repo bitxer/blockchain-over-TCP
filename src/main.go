@@ -87,6 +87,7 @@ func main() {
 			reqsync(&chain)
 		case option[0] == '5':
 			// Print all block chain to screen
+			printSuccess("Printing all blocks in chain")
 			for _, v := range chain {
 				v.Print()
 			}
