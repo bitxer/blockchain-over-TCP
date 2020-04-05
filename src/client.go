@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"net"
 	"os"
 	"syscall"
@@ -13,7 +12,7 @@ func getConn() net.Conn {
 	conn, err := net.Dial("tcp", REMOTE_HOST)
 	if err != nil {
 		if err.(*net.OpError).Err.(*os.SyscallError).Err == syscall.ECONNREFUSED {
-			fmt.Printf("Peer at %s is not contactable\n", REMOTE_HOST)
+			printError("Peer at %s is not contactable\n", REMOTE_HOST)
 			return nil
 		} else {
 			exit_on_error(err)
@@ -28,7 +27,6 @@ func query(index int) {
 		return
 	}
 	conn.Write([]byte("q"))
-
 	conn.Write([]byte{byte(index)})
 	buf := make([]byte, 1)
 	conn.Read(buf)
@@ -104,6 +102,7 @@ func add(chain *[]Block, data string) {
 		printError("Block added unsuccessfully due to validation errors")
 	}
 	conn.Close()
+	reqsync(chain)
 }
 
 func querylast() {

@@ -70,7 +70,7 @@ func main() {
 			// Query for block at index
 			printPrompt("Query for block of index:")
 			buf, _ := reader.ReadString('\n')
-			buf = strings.Replace(option, "\n", "", -1)
+			buf = strings.Replace(buf, "\n", "", -1)
 			index, _ := strconv.Atoi(buf)
 			query(index)
 		case option[0] == '2':
