@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"net"
 	"os"
+	"strconv"
 	"syscall"
 	"time"
 )
@@ -31,14 +32,14 @@ func query(index int) {
 	buf := make([]byte, 1)
 	conn.Read(buf)
 	if buf[0] == 0 {
-		printError("Block of index", string(index), "not found")
+		printError("Block of index", strconv.Itoa(index), "not found")
 		return
 	} else {
 		buf = make([]byte, 256)
 		n, _ := conn.Read(buf)
 		buf = buf[:n]
 		block := deserialise(buf)
-		printSuccess("Block of index", string(index), "found")
+		printSuccess("Block of index", strconv.Itoa(index), "found")
 		block.Print()
 	}
 	conn.Close()
