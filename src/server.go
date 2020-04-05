@@ -16,24 +16,15 @@ func server_add(buf []byte, chain *[]Block, conn net.Conn) {
 }
 
 func search(index int, chain *[]Block, conn net.Conn) {
-	var wg sync.WaitGroup
-	wg.Add(len(*chain))
-	stop := 0
-	for _, v := range *chain {
-
-		go func(v Block) {
-			defer wg.Done()
-			if stop != 1 && v.Index == index {
-				stop = 1
-				conn.Write([]byte{1})
-				v.toConn(conn)
-			}
-		}(v)
-	}
-	wg.Wait()
-	if stop == 0 {
+	if index > len(*chain) {
 		conn.Write([]byte{0})
+		return
+	} else {
+		conn.Write([]byte{1})
 	}
+	v := (*chain)[index-1]
+
+	v.toConn(conn)
 	conn.Close()
 }
 
